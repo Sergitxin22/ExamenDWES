@@ -1,15 +1,106 @@
 ## CREAR MICROSERVICIO
 1. [Creación del proyecto](#creación-del-proyecto)
-2. [Technologies](#technologies)
+2. [Configuración del proyecto](#configuración-del-proyecto)
 3. [Installation](#installation)
 4. [Collaboration](#collaboration)
 5. [FAQs](#faqs)
 ### Creación del proyecto
 ***
-A list of frequently asked questions
-1. File -> New -> Spring Starter Project
-2. <img src="/microservicios/images/creacion-proyecto-1.PNG" width="120">
-3. <img src="/microservicios/images/creacion-proyecto-2.PNG" width="120">
+1. File → New → Spring Starter Project
+2. [Primera pantalla](/microservicios/images/creacion-proyecto-1.PNG)
+3. [Segunda pantalla](/microservicios/images/creacion-proyecto-2.PNG)
+### Configuración del proyecto
+***
+Una vez creado el proyecto vamos a configurar el fichero application.properties ( en src → main → resources) para asignar un nombre a la aplicación, el puerto de escucha y los parámetros de la configuración de SQL Server y del servidor de recursos:
+
+```
+spring.application.name=servicio-usuarios
+server.port=8005
+spring.datasource.url=jdbc:sqlserver://localhost:2000;databaseName=pubs;TrustServerCertificate=true
+spring.datasource.username=sa
+spring.datasource.password=tiger
+spring.datasource.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
+spring.jpa.show-sql=true
+spring.jpa.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
+spring.jpa.hibernate.ddl-auto=update
+```
+### Creación del modelo
+***
+Creamos el modelo Usuario.class en el paquete org.zabalburu.usuarios.modelo
+```
+package org.zabalburu.usuarios.modelo;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@Entity
+@Table(name = "usuarios")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class Usuario {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@EqualsAndHashCode.Include
+	private Integer id;
+	
+	private String usuario;
+	
+	private String nombre;
+	
+	@JsonIgnore
+	@Column(name = "contraseña")
+	private String password;
+}
+```
+### Creación del DTO
+***
+Para incluir la paginación, creamos el DTO UsuarioDTO.class en el paquete org.zabalburu.usuarios.dto\
+```
+package org.zabalburu.usuarios.dto;
+
+import java.util.List;
+
+import org.zabalburu.usuarios.modelo.Usuario;
+
+import lombok.Data;
+
+@Data
+public class UsuarioDTO {
+	private Integer pagina;
+	private Integer totalPaginas;
+	private Integer usuariosPorPagina;
+	private List<Usuario> usuarios;
+}
+```
+### Creación del DAO
+***
+Para incluir la paginación, creamos el DAO UsuariosRepository.class en el paquete org.zabalburu.usuarios.dao\
+Este DAO debe implementar la interfaz JpaRepository<T, ID>: [Imagen](/microservicios/images/crear-repositorio.PNG)
+```
+package org.zabalburu.usuarios.dto;
+
+import java.util.List;
+
+import org.zabalburu.usuarios.modelo.Usuario;
+
+import lombok.Data;
+
+@Data
+public class UsuarioDTO {
+	private Integer pagina;
+	private Integer totalPaginas;
+	private Integer usuariosPorPagina;
+	private List<Usuario> usuarios;
+}
+```
 To answer this question we use an unordered list:
 * First point
 * Second Point
