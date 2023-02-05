@@ -7,6 +7,7 @@
 6. [Creación del servicio](#creación-del-servicio)
 7. [Creación del controlador](#creación-del-controlador)
 8. [Probar la API](#probar-la-api)
+9. [Posibles errores](#posibles-errores)
 ### Creación del proyecto
 ***
 1. File → New → Spring Starter Project
@@ -220,3 +221,42 @@ Podemos probar los siguientes endpoints:
 * GET [http://localhost:8005/usuarios](http://localhost:8005/usuarios) → Esto devuelve todos los usuarios
 * GET [http://localhost:8005/usuarios/{idUsuario}](http://localhost:8005/usuarios/1) → Esto devuelve el usuario con el id que le pasamos
 * GET [http://localhost:8005/usuarios/{usuario}/{password}](http://localhost:8005/usuarios/1) → Esto devuelve el usuario con el nombre y contraseña que le pasamos
+* ### Posibles errores
+***
+Un posible error es que te salgan los usuarios vacíos, yo lo he conseguido solucionar añadiendo un bean al MsUsuariosApplication:
+```
+package org.zabalburu.usuarios;
+
+import javax.sql.DataSource;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+
+@SpringBootApplication
+public class MsUsuariosApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(MsUsuariosApplication.class, args);
+	}
+	
+	@Bean
+	public DataSource dataSource() {
+	    DriverManagerDataSource dataSource = new DriverManagerDataSource();
+	
+	    dataSource.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+	
+	    dataSource.setUsername("sa");
+	
+	    dataSource.setPassword("tiger");
+	
+	    dataSource.setUrl( "jdbc:sqlserver://localhost:2000;databaseName=Northwind;TrustServerCertificate=True;");
+	
+	    return dataSource;
+	
+	 }
+
+}
+```
+Y luego borrándolo.
