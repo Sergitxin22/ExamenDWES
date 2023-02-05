@@ -1,9 +1,12 @@
 ## CREAR MICROSERVICIO
 1. [Creación del proyecto](#creación-del-proyecto)
 2. [Configuración del proyecto](#configuración-del-proyecto)
-3. [Installation](#installation)
-4. [Collaboration](#collaboration)
-5. [FAQs](#faqs)
+3. [Creación del modelo](#creación-del-modelo)
+4. [Creación del DTO](#creación-del-dto)
+5. [Creación del DAO](#creación-del-dao)
+6. [Creación del servicio](#creación-del-servicio)
+7. [Creación del controlador](#creación-del-controlador)
+8. [Probar la API](#probar-la-api)
 ### Creación del proyecto
 ***
 1. File → New → Spring Starter Project
@@ -62,7 +65,7 @@ public class Usuario {
 ```
 ### Creación del DTO
 ***
-Para incluir la paginación, creamos el DTO UsuarioDTO.class en el paquete org.zabalburu.usuarios.dto\
+Para incluir la paginación, creamos el DTO UsuarioDTO.class en el paquete org.zabalburu.usuarios.dto
 ```
 package org.zabalburu.usuarios.dto;
 
@@ -82,72 +85,138 @@ public class UsuarioDTO {
 ```
 ### Creación del DAO
 ***
-Para incluir la paginación, creamos el DAO UsuariosRepository.class en el paquete org.zabalburu.usuarios.dao\
-Este DAO debe implementar la interfaz JpaRepository<T, ID>: [Imagen](/microservicios/images/crear-repositorio.PNG)
+Para incluir la paginación, creamos la interfaz UsuariosRepository.java en el paquete org.zabalburu.usuarios.dao\
+Este DAO debe implementar la interfaz JpaRepository\
+[Imagen](/microservicios/images/crear-repositorio.PNG)
 ```
-package org.zabalburu.usuarios.dto;
+package org.zabalburu.usuarios.dao;
 
-import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.zabalburu.usuarios.modelo.Usuario;
 
-import lombok.Data;
-
-@Data
-public class UsuarioDTO {
-	private Integer pagina;
-	private Integer totalPaginas;
-	private Integer usuariosPorPagina;
-	private List<Usuario> usuarios;
+public interface UsuariosRepository extends JpaRepository<Usuario, Integer> {
+	Page<Usuario> findByOrderByNombre(Pageable pg);
+	
+	@Query("Select u From Usuario u Order By u.nombre")
+	Page<Usuario> getUsuarios(Pageable pg);
+	
+	Optional<Usuario> findByUsuarioAndPassword(String usuario, String password);
+	
+	@Query("Select u From Usuario u Where lower(u.usuario)=lower(:usuario) and u.password=:password")
+	Usuario getUsuario(@Param(value = "usuario") String usuario, @Param(value = "password") String password);
+	
+	@Query(value = "Select * From Usuario Where usuario=:usuario and contraseña=:password",
+			nativeQuery = true)
+	Usuario getUsuarioNative(@Param(value = "usuario") String usuario, @Param(value = "password") String password);	
 }
 ```
-To answer this question we use an unordered list:
-* First point
-* Second Point
-* Third point
-3. **Third question in bold**
-Answer of the third question with *italic words*.
-4. **Fourth question in bold**
-| Headline 1 in the tablehead | Headline 2 in the tablehead | Headline 3 in the tablehead |
-|:--------------|:-------------:|--------------:|
-| text-align left | text-align center | text-align right |
-### Screenshot
-![Image text]([https://www.united-internet.de/fileadmin/user_upload/Brands/Downloads/Logo_IONOS_by.jpg](https://zabalburu.neolms.com/files/4360843/springBoot3(2).PNG?lmsauth=5348b0aafa6e73e7d17b329851881005c362fea1))
-## Technologies
+### Creación del servicio
 ***
-A list of technologies used within the project:
-* [Technologie name](https://example.com): Version 12.3 
-* [Technologie name](https://example.com): Version 2.34
-* [Library name](https://example.com): Version 1234
-## Installation
-***
-A little intro about the installation. 
+Ahora creamos la clase UsuariosService en el paquete org.zabalburu.usuarios.service y le ponemos el decorador @Service, también inyectamos el dao con el decorador @Autowired
 ```
-$ git clone https://example.com
-$ cd ../path/to/the/file
-$ npm install
-$ npm start
+package org.zabalburu.usuarios.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.zabalburu.usuarios.dao.UsuariosRepository;
+import org.zabalburu.usuarios.dto.UsuarioDTO;
+import org.zabalburu.usuarios.modelo.Usuario;
+
+@Service
+public class UsuariosService {
+	@Autowired
+	private UsuariosRepository dao;
+	
+	public UsuarioDTO getUsuarios(Integer pagina) {
+		Pageable pg = PageRequest.of(pagina-1, 2);
+		Page<Usuario> page = dao.findAll(pg);
+		UsuarioDTO userDTO = new UsuarioDTO();
+		userDTO.setPagina(pagina);
+		userDTO.setTotalPaginas(page.getTotalPages());
+		userDTO.setUsuarios(page.getContent());
+		userDTO.setUsuariosPorPagina(2);
+		return userDTO;
+	}
+	
+	public Usuario getUsuario(Integer id) {
+		return dao.findById(id).orElse(null);
+	}
+	
+	public Usuario getUsuario(String usuario, String password) {
+		//return dao.findByUsuarioAndPassword(usuario, password).orElse(null);
+		Usuario u = null;
+		
+		try {
+			u = dao.getUsuario(usuario, password);
+		} catch (Exception ex) {}
+		
+		return u;
+	}
+}
 ```
-Side information: To use the application in a special environment use ```lorem ipsum``` to start
-## Collaboration
+### Creación del controlador
 ***
-Give instructions on how to collaborate with your project.
-> Maybe you want to write a quote in this part. 
-> It should go over several rows?
-> This is how you do it.
-## FAQs
+Ahora creamos la clase UsuariosController en el paquete org.zabalburu.usuarios.controller y le ponemos el decorador @RestController, también inyectamos el servicio con el decorador @Autowired
+```
+package org.zabalburu.usuarios.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.zabalburu.usuarios.dto.UsuarioDTO;
+import org.zabalburu.usuarios.modelo.Usuario;
+import org.zabalburu.usuarios.service.UsuariosService;
+
+@RestController
+@RequestMapping("/usuarios")
+public class UsuariosController {
+	
+	@Autowired
+	private UsuariosService servicio;
+	
+	@GetMapping("")
+	public UsuarioDTO getUsuarios(@RequestParam(defaultValue = "1") Integer pagina) {
+		return servicio.getUsuarios(pagina);
+	}
+	
+	@GetMapping("/{id}")
+	public ResponseEntity<Usuario> getUsuario(@PathVariable Integer id){
+		Usuario u = servicio.getUsuario(id);
+		if (u == null) {
+			return ResponseEntity.notFound().build();
+		} else {
+			return ResponseEntity.ok(u);
+		}
+	}
+	
+	@GetMapping("/{usuario}/{password}")
+	public ResponseEntity<Usuario> getUsuario(@PathVariable String usuario, @PathVariable String password){
+		Usuario u = servicio.getUsuario(usuario, password);
+		if (u == null) {
+			return ResponseEntity.notFound().build();
+		} else {
+			return ResponseEntity.ok(u);
+		}
+	}
+}
+```
+### Probar la API
 ***
-A list of frequently asked questions
-1. **This is a question in bold**
-Answer of the first question with _italic words_. 
-2. __Second question in bold__ 
-To answer this question we use an unordered list:
-* First point
-* Second Point
-* Third point
-3. **Third question in bold**
-Answer of the third question with *italic words*.
-4. **Fourth question in bold**
-| Headline 1 in the tablehead | Headline 2 in the tablehead | Headline 3 in the tablehead |
-|:--------------|:-------------:|--------------:|
-| text-align left | text-align center | text-align right |
+Ahora podemos probar la API en el puerto que hemos configurado en el archivo application.properties, en este caso el 8005.
+Podemos probar los siguientes endpoints:
+* GET [http://localhost:8005/usuarios](http://localhost:8005/usuarios) → Esto devuelve todos los usuarios
+* GET [http://localhost:8005/usuarios/{idUsuario}](http://localhost:8005/usuarios/1) → Esto devuelve el usuario con el id que le pasamos
+* GET [http://localhost:8005/usuarios/{usuario}/{password}](http://localhost:8005/usuarios/1) → Esto devuelve el usuario con el nombre y contraseña que le pasamos
