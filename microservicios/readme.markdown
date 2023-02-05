@@ -8,7 +8,8 @@
 ***
 A list of frequently asked questions
 1. File -> New -> Spring Starter Project
-2. ![Image texta]([[https://www.united-internet.de/fileadmin/user_upload/Brands/Downloads/Logo_IONOS_by.jpg](https://zabalburu.neolms.com/files/4360843/springBoot3(2).PNG?lmsauth=5348b0aafa6e73e7d17b329851881005c362fea1)](https://zabalburu.neolms.com/files/4360843/springBoot3(2).PNG?lmsauth=5348b0aafa6e73e7d17b329851881005c362fea1))
+2. <img src="/microservicios/images/creacion-proyecto-1.PNG" width="120">
+3. <img src="/microservicios/images/creacion-proyecto-2.PNG" width="120">
 To answer this question we use an unordered list:
 * First point
 * Second Point
