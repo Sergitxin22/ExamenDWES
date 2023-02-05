@@ -21,8 +21,7 @@ public class Usuario {
 	@EqualsAndHashCode.Include
 	private Integer id;
 	
-	private String usuario;
-	
+	private String usuario;	
 	private String nombre;
 	
 	@JsonIgnore

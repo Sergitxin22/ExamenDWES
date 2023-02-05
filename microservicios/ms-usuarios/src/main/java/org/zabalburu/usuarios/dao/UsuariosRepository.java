@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.zabalburu.usuarios.modelo.Usuario;
 
 public interface UsuariosRepository extends JpaRepository<Usuario, Integer> {
-
 	Page<Usuario> findByOrderByNombre(Pageable pg);
 	
 	@Query("Select u From Usuario u Order By u.nombre")
@@ -23,6 +22,5 @@ public interface UsuariosRepository extends JpaRepository<Usuario, Integer> {
 	
 	@Query(value = "Select * From Usuario Where usuario=:usuario and contraseña=:password",
 			nativeQuery = true)
-	Usuario getUsuarioNative(@Param(value = "usuario") String usuario, @Param(value = "password") String password);
-	
+	Usuario getUsuarioNative(@Param(value = "usuario") String usuario, @Param(value = "password") String password);	
 }

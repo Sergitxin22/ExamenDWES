@@ -1,3 +1,8 @@
+# Read Me First
+The following was discovered as part of building this project:
+
+* The original package name 'org.zabalburu.ms-usuario' is invalid and this project uses 'org.zabalburu.msusuario' instead.
+
 # Getting Started
 
 ### Reference Documentation

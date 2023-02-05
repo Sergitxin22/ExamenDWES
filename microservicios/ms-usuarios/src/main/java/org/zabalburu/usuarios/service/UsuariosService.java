@@ -32,9 +32,12 @@ public class UsuariosService {
 	public Usuario getUsuario(String usuario, String password) {
 		//return dao.findByUsuarioAndPassword(usuario, password).orElse(null);
 		Usuario u = null;
+		
 		try {
 			u = dao.getUsuario(usuario, password);
 		} catch (Exception ex) {}
+		
 		return u;
 	}
+
 }

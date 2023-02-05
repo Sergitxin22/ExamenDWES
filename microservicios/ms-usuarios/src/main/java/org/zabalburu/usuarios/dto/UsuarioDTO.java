@@ -12,5 +12,4 @@ public class UsuarioDTO {
 	private Integer totalPaginas;
 	private Integer usuariosPorPagina;
 	private List<Usuario> usuarios;
-	
 }
