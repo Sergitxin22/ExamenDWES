@@ -87,7 +87,7 @@ public class UsuarioDTO {
 ***
 Para incluir la paginación, creamos la interfaz UsuariosRepository.java en el paquete org.zabalburu.usuarios.dao\
 Este DAO debe implementar la interfaz JpaRepository\
-[Imagen](/microservicios/images/crear-repositorio.PNG)
+[Imagen](/microservicios/images/crear-repositorios.PNG)
 ```
 package org.zabalburu.usuarios.dao;
 
