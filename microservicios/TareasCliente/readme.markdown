@@ -1,365 +1,550 @@
-## CREAR MICROSERVICIO - TAREAS
+## CREAR CLIENTE - CLIENTE-TAREAS
 1. [Creación del proyecto](#creación-del-proyecto)
 2. [Configuración del proyecto](#configuración-del-proyecto)
-3. [Creación del modelo](#creación-del-modelo)
+3. [Creación de los modelos](#creación-de-los-modelos)
 4. [Creación del DTO](#creación-del-dto)
-5. [Creación del DAO](#creación-del-dao)
-6. [Creación del servicio](#creación-del-servicio)
-7. [Creación del controlador](#creación-del-controlador)
-8. [Añadir RestTemplate al MsTareasApplication](#añadir-resttemplate-al-mstareasapplication)
-9. [Probar la API](#probar-la-api)
-10. [Posibles errores](#posibles-errores)
+5. [Creación de los DAOs](#creación-de-los-daos)
+6. [Creación del controlador](#creación-del-controlador)
+7. [Crear páginas jsp](#crear-páginas-jsp)
 ### Creación del proyecto
 ***
 1. File → New → Spring Starter Project
 2. [Primera pantalla](/microservicios/images/creacion-proyecto-1.PNG)
-3. [Segunda pantalla](/microservicios/images/creacion-proyecto-2.PNG)
+3. [Segunda pantalla](/microservicios/images/librerias-cliente.PNG)
 ### Configuración del proyecto
 ***
-Una vez creado el proyecto vamos a configurar el fichero application.properties ( en src → main → resources) para asignar un nombre a la aplicación, el puerto de escucha y los parámetros de la configuración de SQL Server y del servidor de recursos:
+Para utilizar posteriormente el RestTemplate añadimos al archivo ClienteTareasApplication el siguiente Bean:
+```
+package org.zabalburu.clientetareas;
+
+import javax.sql.DataSource;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
+
+@SpringBootApplication
+public class ClienteTareasApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ClienteTareasApplication.class, args);
+	}
+	
+	@Bean
+	public RestTemplate getTemplate() {
+		return new RestTemplate();
+	}
+}
+```
+Para mostrar páginas jsp añadimos las siguientes dependencias al archivo pom.xml:
+```
+<dependency>
+    <groupId>org.glassfish.web</groupId>
+    <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+</dependency>
+<dependency>
+    <groupId>jakarta.servlet.jsp.jstl</groupId>
+    <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.apache.tomcat.embed</groupId>
+    <artifactId>tomcat-embed-jasper</artifactId>
+    <scope>provided</scope>
+</dependency>
+```
+Una vez creado el proyecto vamos a configurar el fichero application.properties ( en src → main → resources) para asignar un puerto a la aplicación y decirle donde debe buscar las páginas .jsp:
 
 ```
-spring.application.name=servicio-tareas
-server.port=9005
-spring.datasource.url=jdbc:sqlserver://localhost:2000;databaseName=pubs;TrustServerCertificate=true
-spring.datasource.username=sa
-spring.datasource.password=tiger
-spring.datasource.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
-spring.jpa.show-sql=true
-spring.jpa.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
-spring.jpa.hibernate.ddl-auto=update
+spring.mvc.view.prefix=/vistas/
+spring.mvc.view.suffix=.jsp
+server.port=8000
 ```
-### Creación del modelo
+Creamos la carpeta src/main/webapp/vistas/ donde posteriormente crearemos las páginas .jsp
+### Creación de los modelos
 ***
-Creamos el modelo Tarea.class en el paquete org.zabalburu.tareas.modelo
+Creamos el modelo Usuario.class en el paquete org.zabalburu.clientetareas.modelo
 ```
-package org.zabalburu.tareas.modelo;
+package org.zabalburu.clientetareas.modelo;
 
-import java.sql.Date;
-
-import org.springframework.format.annotation.DateTimeFormat;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
-@Entity
-@Table(name = "tareas")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Tarea {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Usuario {
+
 	@EqualsAndHashCode.Include
 	private Integer id;
 	
-	@Column(name = "idusuario")
-	private Integer idUsuario;
+	private String nombre;	
+	private String rol;	
+	private String sexo;
+}
+```
+Creamos el modelo Tarea.class en el paquete org.zabalburu.clientetareas.modelo
+```
+package org.zabalburu.clientetareas.modelo;
+
+import java.util.Date;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class Tarea {
+
+	@EqualsAndHashCode.Include
+	private Integer id;
 	
+	private Usuario usuario;
+	
+	@NotBlank(message = "Debe especificarse el título de la tarea")
 	private String titulo;
 	
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date fecha;
 	
 	private String descripcion;	
-	private Boolean realizada;
+	private Boolean realizada;	
 }
 ```
 ### Creación del DTO
 ***
-Para incluir la paginación, creamos el DTO TareaDTO.class en el paquete org.zabalburu.tareas.dto
+Para incluir la paginación, creamos el DTO TareasDTO.class en el paquete org.zabalburu.clientetareas.dto
 ```
-package org.zabalburu.tareas.dto;
+package org.zabalburu.clientetareas.dto;
 
 import java.util.List;
 
-import org.zabalburu.tareas.modelo.Tarea;
+import org.zabalburu.clientetareas.modelo.Tarea;
 
 import lombok.Data;
 
 @Data
-public class TareaDTO {
+public class TareasDTO {
 	private Integer pagina;
 	private Integer totalPaginas;
 	private Integer tareasPorPagina;
 	private List<Tarea> tareas;
 }
 ```
-### Creación del DAO
+### Creación de los DAOs
 ***
-Para incluir la paginación, creamos la interfaz TareasRepository.java en el paquete org.zabalburu.tareas.dao\
-Este DAO debe implementar la interfaz JpaRepository\
-[Imagen](/microservicios/images/crear-repositorios.PNG)
+Primero creamos la interfaz TareasDAO en el paquete org.zabalburu.clientetareas.dao para definir los métodos de la aplicación:
 ```
-package org.zabalburu.tareas.dao;
+package org.zabalburu.clientetareas.dao;
 
-import java.util.Optional;
+import org.zabalburu.clientetareas.dto.TareasDTO;
+import org.zabalburu.clientetareas.modelo.Tarea;
+import org.zabalburu.clientetareas.modelo.Usuario;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.zabalburu.tareas.modelo.Tarea;
-
-public interface TareasRepository extends JpaRepository<Tarea, Integer> {
-	Page<Tarea> findByIdUsuarioOrderByFechaDesc(Pageable pg, Integer idUsuario);
-
-	@Query("Select t From Tarea t where t.idUsuario=:idusuario and not t.realizada Order By t.fecha desc")
-	Page<Tarea> getTareasPendientes(Pageable pg, @Param(value = "idusuario") Integer idUsuario);
-	
-	Optional<Tarea> findByIdUsuarioAndId(Integer idUsuario, Integer idTarea);
+public interface TareasDAO {
+	public Usuario getUsuario(Integer id);
+	public Usuario getUsuario(String usuario, String password);
+	public TareasDTO getTareas(Integer idEmpleado, Integer pagina);
+	public TareasDTO getTareasPendientes(Integer idEmpleado);
+	public Tarea nuevaTarea(Tarea t);
+	public Tarea getTarea(Integer idUsuario, Integer idTarea);
+	public void eliminarTarea(Integer idUsuario, Integer idTarea);
 }
 ```
-### Creación del servicio
-***
-Ahora creamos la clase TareasService en el paquete org.zabalburu.tareas.service y le ponemos el decorador @Service, también inyectamos el dao con el decorador @Autowired
+Ahora creamos la clase TareasImpl.java en el paquete org.zabalburu.clientetareas.dao, en la que implementamos la interfaz anterior:
 ```
-package org.zabalburu.tareas.service;
+package org.zabalburu.clientetareas.dao;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.zabalburu.tareas.dao.TareasRepository;
-import org.zabalburu.tareas.dto.TareaDTO;
-import org.zabalburu.tareas.modelo.Tarea;
+import org.zabalburu.clientetareas.dto.TareasDTO;
+import org.zabalburu.clientetareas.modelo.Tarea;
+import org.zabalburu.clientetareas.modelo.Usuario;
 
-@Service
-public class TareasService {
-	@Autowired
-	private TareasRepository dao;
+public class TareasImpl implements TareasDAO {
+	
+	private static final String URL_USUARIOS = "http://localhost:8005/usuarios";
+	private static final String URL_TAREAS = "http://localhost:9005/tareas";
 	
 	@Autowired
 	private RestTemplate template;
 	
-	private boolean existeUsuario(Integer idUsuario) {
+	@Override
+	public Usuario getUsuario(Integer id) {
+		Usuario usu = null;
 		try {
-			template.getForObject("http://localhost:8005/usuarios/{id}", Object.class, idUsuario);
-			return true;
+			usu = template.getForObject(URL_USUARIOS + "/{id}", Usuario.class, id);
+		} catch (HttpClientErrorException.NotFound ex) {}
+		return usu;
+	}
+
+	@Override
+	public Usuario getUsuario(String usuario, String password) {
+		Usuario usu = null;
+		try {
+			usu = template.getForObject(URL_USUARIOS + "/{usuario}/{password}", Usuario.class, usuario,password);
+		} catch (HttpClientErrorException ex) {}
+		return usu;
+	}
+
+	@Override
+	public TareasDTO getTareas(Integer idUsuario, Integer pagina) {
+		try {
+			return template.getForObject(URL_TAREAS + "/{idUsuario}?pagina={pagina}", TareasDTO.class,idUsuario,pagina);
 		} catch (HttpClientErrorException.NotFound ex) {
-			return false;
-		}
-	}
-	
-	public TareaDTO getTareas(Integer pagina, Integer idUsuario) {
-		if (existeUsuario(idUsuario)) {
-			Pageable pg = PageRequest.of(pagina-1, 3);
-			Page<Tarea> page = dao.findByIdUsuarioOrderByFechaDesc(pg, idUsuario);
-			TareaDTO dto = new TareaDTO();
-			dto.setPagina(pagina);
-			dto.setTareas(page.getContent());
-			dto.setTareasPorPagina(3);
-			dto.setTotalPaginas(page.getTotalPages());
-			return dto;
-		} else {
 			return null;
 		}
 	}
-	
-	public TareaDTO getTareasPendientes(Integer pagina, Integer idUsuario) {
-		if (existeUsuario(idUsuario)) {
-			Pageable pg = PageRequest.of(pagina-1, 3);
-			Page<Tarea> page = dao.getTareasPendientes(pg, idUsuario);
-			TareaDTO dto = new TareaDTO();
-			dto.setPagina(pagina);
-			dto.setTareas(page.getContent());
-			dto.setTareasPorPagina(3);
-			dto.setTotalPaginas(page.getTotalPages());
-			return dto;
-		} else {
+
+	@Override
+	public TareasDTO getTareasPendientes(Integer idUsuario) {
+		try {
+			return template.getForObject(URL_TAREAS + "/{idUsuario}/pendientes", TareasDTO.class,idUsuario);
+		} catch (HttpClientErrorException.NotFound ex) {
 			return null;
 		}
 	}
-	
+
+	@Override
 	public Tarea nuevaTarea(Tarea t) {
-		if (existeUsuario(t.getIdUsuario())) {
-			return dao.save(t);
-		} else {
-			return null;
-		}
+		t = template.postForObject(URL_TAREAS + "/{idUsuario}", t, Tarea.class,t.getUsuario().getId());
+		return t;
 	}
-	
+
+	@Override
 	public Tarea getTarea(Integer idUsuario, Integer idTarea) {
 		Tarea t = null;
-		if (existeUsuario(idUsuario)) {
-			t = dao.findByIdUsuarioAndId(idUsuario, idTarea).orElse(null);
+		try {
+			t = template.getForObject(URL_TAREAS + "/{idUsuario}/{idTarea}", Tarea.class, idUsuario, idTarea);
+		} catch (HttpClientErrorException ex) {
+			
 		}
 		return t;
 	}
-	
+
+	@Override
 	public void eliminarTarea(Integer idUsuario, Integer idTarea) {
-		try {
-			dao.delete(getTarea(idUsuario, idTarea));
-		} catch (Exception ex) {}
+		template.delete(URL_TAREAS + "/{idUsuario}/{idTarea}",idUsuario, idTarea);
 	}
 }
 ```
 ### Creación del controlador
 ***
-Ahora creamos la clase TareasController en el paquete org.zabalburu.tareas.controller y le ponemos el decorador @RestController, también inyectamos el servicio con el decorador @Autowired
+Ahora creamos la clase TareasController en el paquete org.zabalburu.clientetareas.controlador y le ponemos el decorador @Controller, también inyectamos el dao con el decorador @Autowired
 ```
-package org.zabalburu.tareas.controller;
+package org.zabalburu.clientetareas.controlador;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.zabalburu.tareas.dto.TareaDTO;
-import org.zabalburu.tareas.modelo.Tarea;
-import org.zabalburu.tareas.service.TareasService;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.zabalburu.clientetareas.dao.TareasDAO;
+import org.zabalburu.clientetareas.modelo.Tarea;
+import org.zabalburu.clientetareas.modelo.Usuario;
 
-@RestController
-@RequestMapping("/tareas")
-public class TareasController {
-	@Autowired
-	private TareasService servicio;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+
+@Controller
+@SessionAttributes({"usuario"})
+public class TareasController {	
+	private TareasDAO dao;
 	
-	@GetMapping("/{idUsuario}")
-	public ResponseEntity<TareaDTO> getUsuarios(@RequestParam(defaultValue = "1") Integer pagina,
-			@PathVariable Integer idUsuario){
-		TareaDTO dto = servicio.getTareas(pagina, idUsuario);
-		if (dto == null) {
-			return ResponseEntity.notFound().build();
-		} else {
-			return ResponseEntity.ok(dto);
+	@RequestMapping("/")
+	public String index() {
+		return "index";
+	}
+	
+	@RequestMapping("/login")
+	public String login(@RequestParam String usuario, @RequestParam String password,
+			Model modelo) {
+		Usuario user = dao.getUsuario(usuario, password);
+		Tarea t = new Tarea();
+		t.setFecha(new Date());
+		if (user == null) {
+			modelo.addAttribute("error","Usuario / password erróneos");
+			return "index";
 		}
+		modelo.addAttribute("usuario",user);
+		modelo.addAttribute("tareas", dao.getTareas(user.getId(),1));
+		modelo.addAttribute("tarea",t);
+		return "usuario";
 	}
 	
-	@GetMapping("/pendientes/{idUsuario}")
-	public ResponseEntity<TareaDTO> getTareasPendientes(@RequestParam(defaultValue = "1") Integer pagina,
-			@PathVariable Integer idUsuario){
-		TareaDTO dto = servicio.getTareasPendientes(pagina, idUsuario);
-		if (dto == null) {
-			return ResponseEntity.notFound().build();
-		} else {
-			return ResponseEntity.ok(dto);
+	@RequestMapping("/nuevaTarea")
+	public String nuevaTarea(@Valid @ModelAttribute Tarea t,
+			BindingResult result, Model modelo) {
+		Usuario usuario = (Usuario) modelo.getAttribute("usuario");
+		if (result.hasErrors()) {
+			modelo.addAttribute("tareas", dao.getTareas(usuario.getId(),1));
+			return "usuario";
 		}
+		t.setUsuario(usuario);
+		t.setRealizada(false);
+		t = dao.nuevaTarea(t);
+		modelo.addAttribute("tareas", dao.getTareas(usuario.getId(),1));
+		t = new Tarea();
+		t.setFecha(new Date());
+		modelo.addAttribute("tarea",t);
+		modelo.addAttribute("msg","Tarea añadida con éxito!");
+		return "usuario";
 	}
 	
-	@PostMapping("/{idUsuario}")
-	public ResponseEntity<Tarea> nuevaTarea(@PathVariable Integer idUsuario, @RequestBody Tarea t) throws URISyntaxException{
-		t.setIdUsuario(idUsuario);
-		t = servicio.nuevaTarea(t);
-		if (t == null) {
-			return ResponseEntity.notFound().build();
-		} else {
-			return ResponseEntity.created(new URI("http://localhost:9005/tareas/"+idUsuario+"/" +t.getId()))
-					.body(t);
+	@RequestMapping("/finalizar")
+	public String finalizarTarea(@RequestParam Integer idTarea, Model modelo) {
+		Usuario usuario = (Usuario) modelo.getAttribute("usuario");
+		Tarea t = dao.getTarea(usuario.getId(), idTarea);
+		if (t!=null) {
+			t.setRealizada(true);
+			dao.nuevaTarea(t);
 		}
+		modelo.addAttribute("tareas", dao.getTareas(usuario.getId(),1));
+		t = new Tarea();
+		t.setFecha(new Date());
+		modelo.addAttribute("tarea",t);
+		modelo.addAttribute("msg","Tarea finalizada con éxito!");
+		return "usuario";
 	}
 	
-	@GetMapping("/{idUsuario}/{idTarea}")
-	public ResponseEntity<Tarea> getUsuario(@PathVariable Integer idUsuario, @PathVariable Integer idTarea){
-		Tarea t = servicio.getTarea(idUsuario,idTarea);
-		if (t == null) {
-			return ResponseEntity.notFound().build();
-		} else {
-			return ResponseEntity.ok(t);
-		}
+	@RequestMapping("/eliminar")
+	public String eliminarTarea(@RequestParam Integer idTarea, Model modelo) {
+		Usuario usuario = (Usuario) modelo.getAttribute("usuario");
+		dao.eliminarTarea(usuario.getId(), idTarea);
+		modelo.addAttribute("tareas", dao.getTareas(usuario.getId(),1));
+		Tarea t = new Tarea();
+		t.setFecha(new Date());
+		modelo.addAttribute("tarea",t);
+		modelo.addAttribute("msg","Tarea eliminada con éxito!");
+		return "usuario";
 	}
 	
-	@DeleteMapping("/{idUsuario}/{idTarea}")
-	public ResponseEntity<?> eliminarTarea(@PathVariable Integer idUsuario, @PathVariable Integer idTarea){
-		servicio.eliminarTarea(idUsuario,idTarea);
-		return ResponseEntity.ok().build();
-	}	
-}
-```
-### Añadir RestTemplate al MsTareasApplication
-***
-Hay que añadir el been del RestTemplate al MsTareasApplication
-```
-package org.zabalburu.tareas;
-
-import javax.sql.DataSource;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.web.client.RestTemplate;
-
-@SpringBootApplication
-public class MsTareasApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(MsTareasApplication.class, args);
+	@RequestMapping("/ir")
+	public String ir(@RequestParam Integer pos, Model modelo) {
+		Usuario usuario = (Usuario) modelo.getAttribute("usuario");
+		modelo.addAttribute("tareas", dao.getTareas(usuario.getId(),pos));
+		Tarea t = new Tarea();
+		t.setFecha(new Date());
+		modelo.addAttribute("tarea",t);
+		return "usuario";
 	}
 	
-	@Bean
-	public RestTemplate gettemplate() {
-		return new RestTemplate();
-	}
-}
-```
-### Probar la API
-***
-Ahora podemos probar la API en el puerto que hemos configurado en el archivo application.properties, en este caso el 9005.
-Podemos probar los siguientes endpoints:
-* GET [http://localhost:9005/tareas/{idUsuario}](http://localhost:9005/tareas/1) → Esto devuelve todas las tareas del usuarioId que le pasamos
-* GET [http://localhost:9005/tareas/pendientes/{idUsuario}](http://localhost:9005/tareas/pendientes/1) → Esto devuelve todas las tareas pendientes del usuarioId que le pasamos
-* POST [http://localhost:9005/tareas/{idUsuario}](http://localhost:9005/tareas/1) → Esto añade la tarea al usuario indicado
-* GET [http://localhost:9005/tareas/{idUsuario}/{idTarea}](http://localhost:9005/tareas/1/1) → Esto devuelve la tarea del usuario y tarea indicados
-* DELETE [http://localhost:9005/tareas/{idUsuario}/{idTarea}](http://localhost:9005/tareas/1/1) → Esto elimina la tarea del usuario y tarea indicados 
-### Posibles errores
-***
-Un posible error es que no te haga caso al puerto configurado, yo lo he soluciionado dándole a project → clean y añadiendo lo siguiente al MsTareasApplication:
-```
-package org.zabalburu.tareas;
-
-import javax.sql.DataSource;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.web.client.RestTemplate;
-
-@SpringBootApplication
-public class MsTareasApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(MsTareasApplication.class, args);
-	}
-	
-	@Bean
-	public DataSource dataSource() {
-	    DriverManagerDataSource dataSource = new DriverManagerDataSource();
-	
-	    dataSource.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-	
-	    dataSource.setUsername("sa");
-	
-	    dataSource.setPassword("tiger");
-	
-	    dataSource.setUrl( "jdbc:sqlserver://localhost:2000;databaseName=Northwind;TrustServerCertificate=True;");
-	
-	    return dataSource;
-	
-	 }
-	
-	@Bean
-	public RestTemplate gettemplate() {
-		return new RestTemplate();
+	@RequestMapping("/salir")
+	public String salir(HttpSession sesion) {
+		sesion.invalidate();
+		return "index";
 	}
 }
 ```
-Y luego borrándolo.
+### Crear páginas jsp
+***
+Para finalizar hay que crear las páginas .jsp\
+index.jsp:
+```
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestión Tareas</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+	crossorigin="anonymous">
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-2"></div>
+			<div class="col-8 text-center">
+				<h1>Identifíquese ${usuario }</h1>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-2"></div>
+			<div class="col-8">
+
+				<form action="/login" method="post">
+					<div class="mb-3">
+						<label for="exampleInputEmail1" class="form-label">Usuario</label>
+						<input type="text" class="form-control" id="exampleInputEmail1"
+							aria-describedby="emailHelp" name="usuario" value="${param.usuario }">
+					</div>
+					<div class="mb-3">
+						<label for="exampleInputPassword1" class="form-label">Password</label>
+						<input type="password" class="form-control"
+							id="exampleInputPassword1" name="password">
+					</div>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</form>
+			</div>
+		</div>
+		<c:if test="${!empty error }">
+			<div class="row mt-3">
+				<div class="col-2"></div>
+				<div class="col-8 text-center">
+					<div class="alert alert-danger">${error }</div>
+				</div>
+			</div>
+		</c:if>
+	</div>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+		crossorigin="anonymous"></script>
+</body>
+</html>
+```
+usuario.jsp:
+```
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core"%>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt"%>
+<%@ taglib prefix="frm" uri="http://www.springframework.org/tags/form"%>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestión Tareas</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
+	crossorigin="anonymous">
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-2"></div>
+			<div class="col-8 text-center">
+				<h1>
+					Bienvenido/a ${usuario.nombre } <a href="/salir"
+						class="btn btn-outline-primary">Salir</a>
+				</h1>
+			</div>
+		</div>
+		<c:if test="${! empty msg }">
+			<div class="row">
+				<div class="col-2"></div>
+				<div class="col-8">
+					<div class="alert alert-success">${msg }</div>
+				</div>
+			</div>
+		</c:if>
+		<c:if test="${empty tareas.tareas }">
+			<div class="row">
+				<div class="col-2"></div>
+				<div class="col-8">
+					<div class="alert alert-info">No hay tareas</div>
+				</div>
+			</div>
+		</c:if>
+		<c:if test="${!empty tareas.tareas }">
+			<div class="row">
+				<div class="col-12">
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col">#</th>
+								<th scope="col">Título</th>
+								<th scope="col">Fecha</th>
+								<th scope="col">Descripción</th>
+								<th></th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							<c:forEach var="t" items="${tareas.tareas }">
+								<tr>
+									<th scope="row">${t.id }</th>
+									<td>${t.titulo}</td>
+									<td><fmt:formatDate value="${t.fecha }" /></td>
+									<td>${t.descripcion }</td>
+									<td><c:if test="${!t.realizada }">
+											<a href="/finalizar?idTarea=${t.id }"
+												class="btn btn-outline-primary">Finalizar</a>
+										</c:if></td>
+									<td><a href="/eliminar?idTarea=${t.id }"
+										class="btn btn-outline-danger">Eliminar</a></td>
+								</tr>
+							</c:forEach>
+						</tbody>
+					</table>
+				</div>
+				<nav aria-label="Page navigation example">
+					<ul class="pagination">
+						<c:if test="${tareas.pagina > 1 }">
+							<li class="page-item"><a class="page-link"
+								href="/ir?pos=${tareas.pagina-1 }">Anterior</a></li>
+						</c:if>
+						<c:forEach begin="1" end="${tareas.totalPaginas }" var="pos">
+						<li class="page-item"><a class="page-link"
+							href="/ir?pos=${pos }">${pos }</a></li>
+						</c:forEach>
+						
+						<c:if test="${tareas.pagina <tareas.totalPaginas }">
+							<li class="page-item"><a class="page-link"
+								href="/ir?pos=${tareas.pagina+1 }">Siguiente</a></li>
+						</c:if>
+					</ul>
+				</nav>
+			</div>
+		</c:if>
+		<div class="row">
+			<div class="col-2"></div>
+			<div class="col-8">
+				<frm:form action="/nuevaTarea" modelAttribute="tarea">
+					<div class="mb-3">
+						<label for="exampleInputEmail1" class="form-label">Título</label>
+						<frm:input type="text" class="form-control"
+							id="exampleInputEmail1" aria-describedby="emailHelp"
+							path="titulo" />
+						<frm:errors path="titulo" cssClass="text-danger"></frm:errors>
+					</div>
+					<div class="mb-3">
+						<label for="exampleInputEmail1" class="form-label">Fecha</label>
+						<frm:input type="date" class="form-control"
+							id="exampleInputEmail1" aria-describedby="emailHelp" path="fecha" />
+					</div>
+					<div class="mb-3">
+						<label for="exampleInputEmail1" class="form-label">Descripción</label>
+						<frm:textarea type="text" class="form-control"
+							id="exampleInputEmail1" aria-describedby="emailHelp"
+							path="descripcion" />
+					</div>
+					<button type="submit" class="btn btn-primary">Guardar</button>
+				</frm:form>
+
+			</div>
+		</div>
+		<c:if test="${!empty error }">
+			<div class="row mt-3">
+				<div class="col-2"></div>
+				<div class="col-8 text-center">
+					<div class="alert alert-danger">${error }</div>
+				</div>
+			</div>
+		</c:if>
+	</div>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+		crossorigin="anonymous"></script>
+</body>
+</html>
+```
