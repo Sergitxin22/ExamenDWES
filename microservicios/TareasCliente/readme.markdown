@@ -256,7 +256,8 @@ import jakarta.validation.Valid;
 
 @Controller
 @SessionAttributes({"usuario"})
-public class TareasController {	
+public class TareasController {
+	@Autowired
 	private TareasDAO dao;
 	
 	@RequestMapping("/")
