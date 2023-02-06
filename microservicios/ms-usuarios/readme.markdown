@@ -221,7 +221,7 @@ Podemos probar los siguientes endpoints:
 * GET [http://localhost:8005/usuarios](http://localhost:8005/usuarios) → Esto devuelve todos los usuarios
 * GET [http://localhost:8005/usuarios/{idUsuario}](http://localhost:8005/usuarios/1) → Esto devuelve el usuario con el id que le pasamos
 * GET [http://localhost:8005/usuarios/{usuario}/{password}](http://localhost:8005/usuarios/1) → Esto devuelve el usuario con el nombre y contraseña que le pasamos
-* ### Posibles errores
+### Posibles errores
 ***
 Un posible error es que te salgan los usuarios vacíos, yo lo he conseguido solucionar añadiendo un bean al MsUsuariosApplication:
 ```
