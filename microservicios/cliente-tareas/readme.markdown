@@ -6,6 +6,7 @@
 5. [Creación de los DAOs](#creación-de-los-daos)
 6. [Creación del controlador](#creación-del-controlador)
 7. [Crear páginas jsp](#crear-páginas-jsp)
+8. [Posibles errores](#posibles-errores)
 ### Creación del proyecto
 ***
 1. File → New → Spring Starter Project
@@ -549,3 +550,6 @@ usuario.jsp:
 </body>
 </html>
 ```
+### Posibles errores
+***
+Un posible error es que te de un error que dice que no se ha encontrado el BEan del DAO, de momento no he encontrado la solución: [Error](/microservicios/images/error.PNG)
