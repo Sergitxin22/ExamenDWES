@@ -6,7 +6,6 @@
 5. [Creación de los DAOs](#creación-de-los-daos)
 6. [Creación del controlador](#creación-del-controlador)
 7. [Crear páginas jsp](#crear-páginas-jsp)
-8. [Posibles errores](#posibles-errores)
 ### Creación del proyecto
 ***
 1. File → New → Spring Starter Project
