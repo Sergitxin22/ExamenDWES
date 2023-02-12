@@ -165,6 +165,7 @@ import org.zabalburu.clientetareas.dto.TareasDTO;
 import org.zabalburu.clientetareas.modelo.Tarea;
 import org.zabalburu.clientetareas.modelo.Usuario;
 
+@Repository
 public class TareasImpl implements TareasDAO {
 	
 	private static final String URL_USUARIOS = "http://localhost:8005/usuarios";
@@ -550,6 +551,3 @@ usuario.jsp:
 </body>
 </html>
 ```
-### Posibles errores
-***
-Un posible error es que te de un error que dice que no se ha encontrado el BEan del DAO, de momento no he encontrado la solución: [Error](/microservicios/images/error.PNG)
